@@ -42,7 +42,7 @@
 			}
 		</style>
 		<script>
-			let dataText, resultText, frags = [0, 0, -1, -1, -1], shareRateData = [];
+			let DATATEXT = [], resultText, frags = [0, 0, -1, -1, -1], shareRateData = [];
 			function inputSelect() {
 				let tempInOptEl = document.getElementById("inputOption"), tempEl1InSec, tempEl2InSec, tempEl3InSec, newSpan, shareOptionDiv = document.getElementById("shareOption");
 				const selectElement = document.getElementById("inputSelect");
@@ -151,7 +151,7 @@
 				inputSelectEl.remove();
 				document.getElementById("inputSelectDiv").appendChild(newSpan);
 				let tempEl1Init = document.getElementById("inputButton");
-				tempEl1Init.value = "追加";
+				tempEl1Init.value = "　追加　";
 				tempEl1Init.onclick = "";
 				tempEl1Init.addEventListener("click", addData);
 				for(let i = 0; i < optionEls.length; i++) {
@@ -398,6 +398,22 @@
 				}
 				console.log(frags);
 			}
+
+			function copyResult(frag) {
+				if(frag) {
+					let result = document.getElementById("outputArea");
+					if(navigator.clipboard) {
+						navigator.clipboard.writeText(result.value);
+					} else {
+						result.select();
+						document.execCommand('copy');
+					}
+					document.getElementById("copyResultSpan").innerHTML = "コピーしました。";
+					window.setTimeout(copyResult, 3000);
+				} else {
+					document.getElementById("copyResultSpan").innerHTML = "";
+				}
+			}
 		</script>
 	</head>
 	<body>
@@ -428,7 +444,7 @@
 				</span></div>
 				</td></tr>
 				<tr><td>
-				<input id="inputButton" type="button" value="入力" onclick="inputData()">
+				<input id="inputButton" type="button" value="　入力　" onclick="inputData()">
 				<input id="inputClearButton" type="button" value="リセット" onclick="window.location.reload();">
 				</td></tr>
 			</table>
@@ -459,6 +475,11 @@
 				<div>
 				<input type="checkbox" name="outputOption" value="comma" onchange="outputOptChange(3)">カンマをつける
 				</div>
+				</td></tr>
+				<tr><td>
+					<input id="copyButton" type="button" value="結果をコピー" onclick="copyResult(true)">
+				</td><td>
+					<span id="copyResultSpan"></span>
 				</td></tr>
 			</table>
 		</div>
