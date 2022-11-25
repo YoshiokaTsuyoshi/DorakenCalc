@@ -135,8 +135,8 @@
 				init(selectElement.value);
 				switch(selectElement.value) {
 				case "total":
-					totalData = textToData(inputData.value);
-					dataToTotal(totalData);
+					dataToTotal(textToData(inputData.value));
+					totalToResult();
 					break;
 				case "rank":
 					dataToRank(inputData.value);
@@ -206,7 +206,7 @@
 			}
 			function dataToTotal(data) {
 				let dataNum, dataBuf, dataName, dataK, dataS, dataG, t_size, dataY, dataV, dataT;
-				let TEXT = [], string = [], stringSize;
+				let string = [], stringSize;
 				for(let i = 0; true; i++) {
 					dataNum = data.search("ログイン:");
 					if(dataNum == -1) {
@@ -245,12 +245,10 @@
 					dataNum = dataBuf.search("\n");
 					dataT = dataBuf.slice(0, dataNum);
 					
-					if(frags[0] == "share") {
-						dataG = dataG.replace(/,/g, "");
-						dataG = dataG.replace(/G/i, "");
-						dataT = dataG.replace(/,/g, "");
-						dataT = dataG.replace(/G/i, "");
-					}
+					dataG = dataG.replace(/,/g, "");
+					dataG = dataG.replace(/G/i, "");
+					dataT = dataG.replace(/,/g, "");
+					dataT = dataG.replace(/G/i, "");
 					
 					dataNum = dataBuf.search("pt:");
 					dataBuf = dataBuf.slice(dataNum + 3);
@@ -270,23 +268,37 @@
 						string.push(dataV);
 					}
 					
-					TEXT.push(string);
+					DATATEXT.push(string);
 					string = [];
 				}
-				if(frags[0] == "share") return TEXT;
+
+				if(frags[0] == "share") return DATATEXT;
+				console.log(DATATEXT);
+			}
+
+			function totalToResult() {
+				TEXT = JSON.parse(JSON.stringify(DATATEXT));
 				stringSize = (frags[1] == "alldata" ? 7 : 4);
 				let totalString = (frags[1] == "alldata" ? "名前:獲得G/勝利pt/勝点/役職/登録G/軍vs軍pt\n\n" : "");
-				for(let i = 0; i < t_size; i++) {
-					//string = string + TEXT[i] + "\n";
+				for(let i = 0; i < TEXT.length; i++) {
+					if(frags[2] == 1) {
+						totalString += (i + 1) + ".";
+					}
+					if(frags[4] == 1) {
+						for(let j = TEXT[i][1].length - 3; j >= 0; j -= 3) {
+							TEXT[i][1] = TEXT[i][1].slice(0, j) + "," + TEXT[i][1].slice(j)
+						}
+					}
+					if(frags[3] == 1) {
+						TEXT[i][1] += "G";
+					}
 					totalString = totalString + TEXT[i][0] + ":" + TEXT[i][1];
 					for(let j = 2; j < stringSize; j++) {
 						totalString = totalString + "/" + TEXT[i][j];
 					}
 					totalString = totalString + "\n";
 				}
-				//document.getElementById("outputArea").value = string;
 				document.getElementById("outputArea").value = totalString;
-				return TEXT;
 			}
 			
 			function dataToRank(inputText) {
@@ -361,27 +373,18 @@
 				string = outTextEl.value;
 				switch(frags[0]) {
 				case "total":
-					let tempStrArray = dataToTotal(textToData(inTextEl.value)), stringSize = (frags[1] == "alldata" ? 7 : 4);
-					//for(let i = 0; i < tempStrArray.length; i++) string = string + tempStrArray[i] + "\n";
-					for(let i = 0; i < tempStrArray.length; i++) {
-						string += tempStrArray[i][0] + ":" + tempStrArray[i][1];
-						for(let j = 2; j < stringSize; j++) {
-							string += "/" + tempStrArray[i][j];
-						}
-						string += "\n";
-					}
-					inTextEl.value = "";
-					outTextEl.value = string;
+					dataToTotal(textToData(inTextEl.value));
+					totalToResult();
 					break;
 				case "rank":
 					break;
 				case "share":
 					let addShareText = dataToShare(dataToTotal(textToData(inTextEl.value)));
 					string += addShareText.substring(addShareText.indexOf("\n\n") + 2);
-					inTextEl.value = "";
 					outTextEl.value = string;
 					break;
 				}
+				inTextEl.value = "";
 			};
 			
 			function outputOptChange(number) {
