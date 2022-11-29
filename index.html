@@ -147,8 +147,8 @@
 					dataToRank(inputData.value);
 					break;
 				case "share":
-					shareData = dataToTotal(textToData(inputData.value));
-					dataToShare(shareData);
+					dataToTotal(textToData(inputData.value));
+					dataToShare();
 					break;
 				}
 				inputData.value = "";
@@ -310,7 +310,7 @@
 				
 			}
 			
-			function dataToShare(inputText) {
+			function dataToShare() {
 				let shareRateEls = document.getElementsByName("shareRate");
 				
 				let tempString, shareString =  "名前:", tempNum = 0, tempTotal = 0, tempSyori = 0;
@@ -319,21 +319,21 @@
 					shareString += tempString[1] + "(" + shareRateData[0] + "%)/";
 					shareString += tempString[2] + "(基本給)/";
 					shareString += tempString[3] + "(1pt当たり" + shareRateData[1] + "G)/分配合計\n\n";
-					for(let i = 0; i < inputText.length; i++) {
-						shareString += inputText[i][0] + ":";
-						tempNum = Math.floor(parseInt(inputText[i][1]) * shareRateData[0] / 100);
-						shareString += "(" + tempString[1] + ")" + inputText[i][1] + "→" + tempNum + "G/";
+					for(let i = 0; i < DATATEXT.length; i++) {
+						shareString += DATATEXT[i][0] + ":";
+						tempNum = Math.floor(parseInt(DATATEXT[i][1]) * shareRateData[0] / 100);
+						shareString += "(" + tempString[1] + ")" + DATATEXT[i][1] + "→" + tempNum + "G/";
 						tempTotal = tempNum;
-						tempShori = parseInt(inputText[i][2]);
+						tempShori = parseInt(DATATEXT[i][2]);
 						if(tempShori <= 59) tempNum = 0;
 						else if(tempShori < 100) tempNum = 150;
 						else if(tempShori < 130) tempNum = 300;
 						else if(tempShori < 160) tempNum = 500;
 						else if(tempShori >= 160) tempNum = 750;
-						shareString += "(" + tempString[2] + ")" + inputText[i][2] + "→" + tempNum + "G/";
+						shareString += "(" + tempString[2] + ")" + DATATEXT[i][2] + "→" + tempNum + "G/";
 						tempTotal += tempNum;
-						tempNum = Math.floor(parseInt(inputText[i][3]) * shareRateData[1]);
-						shareString += "(" + tempString[3] + ")" + inputText[i][3] + "→" + tempNum + "G/";
+						tempNum = Math.floor(parseInt(DATATEXT[i][3]) * shareRateData[1]);
+						shareString += "(" + tempString[3] + ")" + DATATEXT[i][3] + "→" + tempNum + "G/";
 						tempTotal += tempNum;
 						shareString += "(分配合計)" + tempTotal + "G\n";
 					}
@@ -343,9 +343,9 @@
 					shareString += tempString[1] + "(団員は0G)/";
 					shareString += tempString[2] + "(5%)/";
 					shareString += tempString[3] + "(1pt当たり" + shareRateData[2] + "G)/分配合計\n\n";
-					for(let i = 0; i < inputText.length; i++) {
-						shareString += inputText[i][0] + ":";
-						switch(inputText[i][4]) {
+					for(let i = 0; i < DATATEXT.length; i++) {
+						shareString += DATATEXT[i][0] + ":";
+						switch(DATATEXT[i][4]) {
 						case "団員":
 							tempNum = 0;
 							break;
@@ -358,13 +358,13 @@
 						default:
 							tempNum = 500;
 						}
-						shareString += "(" + tempString[1] + ")" + inputText[i][4] + "→" + tempNum + "G/";
+						shareString += "(" + tempString[1] + ")" + DATATEXT[i][4] + "→" + tempNum + "G/";
 						tempTotal = tempNum;
-						tempNum = Math.floor(parseInt(inputText[i][5]) * 0.05);
-						shareString += "(" + tempString[2] + ")" + inputText[i][5] + "→" + tempNum + "G/";
+						tempNum = Math.floor(parseInt(DATATEXT[i][5]) * 0.05);
+						shareString += "(" + tempString[2] + ")" + DATATEXT[i][5] + "→" + tempNum + "G/";
 						tempTotal += tempNum;
-						tempNum = Math.floor(parseInt(inputText[i][6]) * parseFloat(shareRateData[3]));
-						shareString += "(" + tempString[3] + ")" + inputText[i][6] + "→" + tempNum + "G/";
+						tempNum = Math.floor(parseInt(DATATEXT[i][6]) * parseFloat(shareRateData[3]));
+						shareString += "(" + tempString[3] + ")" + DATATEXT[i][6] + "→" + tempNum + "G/";
 						tempTotal += tempNum;
 						shareString += "(分配合計)" + tempTotal + "G\n";
 					}
@@ -384,9 +384,11 @@
 				case "rank":
 					break;
 				case "share":
-					let addShareText = dataToShare(dataToTotal(textToData(inTextEl.value)));
-					string += addShareText.substring(addShareText.indexOf("\n\n") + 2);
-					outTextEl.value = string;
+					dataToTotal(textToData(inTextEl.value));
+					dataToShare();
+					//let addShareText = dataToShare(dataToTotal(textToData(inTextEl.value)));
+					//string += addShareText.substring(addShareText.indexOf("\n\n") + 2);
+					//outTextEl.value = string;
 					break;
 				}
 				inTextEl.value = "";
