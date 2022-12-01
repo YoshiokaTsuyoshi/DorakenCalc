@@ -284,13 +284,17 @@
 			function totalToResult() {
 				TEXT = JSON.parse(JSON.stringify(DATATEXT));
 				stringSize = (frags[1] == "alldata" ? 7 : 4);
-				let totalString = (frags[1] == "alldata" ? "名前:獲得G/勝利pt/勝点/役職/登録G/軍vs軍pt\n\n" : "");
+				let totalString = "", delimiter = "/";
+				if(frags[1] == "alldata") {
+					totalString = "名前:獲得G,勝利pt,勝点,役職,登録G,軍vs軍pt\n\n";
+					delimiter = ",";
+				}
 				for(let i = 0; i < TEXT.length; i++) {
 					if(frags[2] == 1) {
 						totalString += (i + 1) + ".";
 					}
 					if(frags[4] == 1) {
-						for(let j = TEXT[i][1].length - 3; j >= 0; j -= 3) {
+						for(let j = TEXT[i][1].length - 3; j > 0; j -= 3) {
 							TEXT[i][1] = TEXT[i][1].slice(0, j) + "," + TEXT[i][1].slice(j)
 						}
 					}
@@ -299,7 +303,7 @@
 					}
 					totalString = totalString + TEXT[i][0] + ":" + TEXT[i][1];
 					for(let j = 2; j < stringSize; j++) {
-						totalString = totalString + "/" + TEXT[i][j];
+						totalString = totalString + delimiter + TEXT[i][j];
 					}
 					totalString = totalString + "\n";
 				}
@@ -421,10 +425,12 @@
 						result.select();
 						document.execCommand('copy');
 					}
-					document.getElementById("copyResultSpan").innerHTML = "コピーしました。";
+					document.getElementById("copyResultSpan").innerHTML = "団長データも忘れずに";
+					document.getElementById("copyButton").value = "コピー完了";
 					window.setTimeout(copyResult, 3000);
 				} else {
 					document.getElementById("copyResultSpan").innerHTML = "";
+					document.getElementById("copyButton").value = "結果をコピー";
 				}
 			}
 		</script>
