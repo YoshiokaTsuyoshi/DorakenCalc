@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ja">
+	<head>
+		<meta http-equiv="content-language" content="ja">
+		<meta http-equiv="content-type" content="text/html">
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<title>DORAKEN集計用</title>
+		<style>
+			@media screen and (max-width: 500px) {
+				
+			}
+			@media screen and (max-width: 1920px) {
+				
+			}
+			h1{
+				text-align: center;
+				border: 3px solid black;
+			}
+			#contents{
+				position: sticky;
+				bottom: 10px;
+			}
+			ul.contentsUl{
+				display: block;
+				list-style-type:none;
+				padding: 0px;
+				margin: 16px 10px;
+			}
+			ul.contentsUl a{
+				display: block;
+				background-color: #66cc99;
+				color: #ffffff;
+				padding: 5px 5px;
+				margin: 2px;
+				text-align: center;
+			}
+			textarea{
+				display: block;
+				top: 0px;
+				left: 0px;
+			}
+			img{
+				border: 2px solid #ffff00;
+			}
+			details > summary{
+				font-size: large;
+				border:solid  2px;
+				background-color: aqua;
+			}
+		</style>
+		<script>
+			let DATATEXT = [], resultText, frags = [0, 0, -1, -1, -1], shareRateData = [];
+			function inputSelect() {
+				let tempInOptEl = document.getElementById("inputOption"), tempEl1InSec, tempEl2InSec, tempEl3InSec, newSpan, shareOptionDiv = document.getElementById("shareOption");
+				const selectElement = document.getElementById("inputSelect");
+				document.getElementById("inOptSpan").remove();
+				if(document.getElementById("shareOptDiv")) document.getElementById("shareOptDiv").remove();
+				newSpan = document.createElement("span");
+				newSpan.id = "inOptSpan";
+				tempEl1InSec = document.createElement("input");
+				tempEl2InSec = document.createElement("input");
+				tempEl3InSec = document.createElement("input");
+				tempEl1InSec.type = "radio";
+				tempEl2InSec.type = "radio";
+				tempEl3InSec.type = "radio";
+				tempEl1InSec.name = selectElement.value;
+				tempEl2InSec.name = selectElement.value;
+				tempEl3InSec.name = selectElement.value;
+				switch(selectElement.value) {
+				case "total":
+					tempEl1InSec.value = "syukei";
+					tempEl2InSec.value = "alldata";
+					tempEl1InSec.checked = true;
+					newSpan.appendChild(tempEl1InSec)
+					newSpan.appendChild(document.createTextNode("集計用"));
+					newSpan.appendChild(tempEl2InSec);
+					newSpan.appendChild(document.createTextNode("全データ"));
+					tempInOptEl.appendChild(newSpan);
+					break;
+				case "rank":
+					tempEl1InSec.value = "kakutoku";
+					tempEl2InSec.value = "syori";
+					tempEl3InSec.value = "katiten";
+					tempEl1InSec.checked = true;
+					newSpan.appendChild(tempEl1InSec);
+					newSpan.appendChild(document.createTextNode("獲得"));
+					newSpan.appendChild(tempEl2InSec);
+					newSpan.appendChild(document.createTextNode("勝利"));
+					newSpan.appendChild(tempEl3InSec);
+					newSpan.appendChild(document.createTextNode("勝点"));
+					tempInOptEl.appendChild(newSpan);
+					break;
+				case "share":
+					tempEl1InSec.value = "goryusya";
+					tempEl2InSec.value = "zigun";
+					tempEl1InSec.checked = true;
+					newSpan.appendChild(tempEl1InSec);
+					newSpan.appendChild(document.createTextNode("合流者"));
+					newSpan.appendChild(tempEl2InSec);
+					newSpan.appendChild(document.createTextNode("自軍"));
+					tempInOptEl.appendChild(newSpan);
+					let goldRate = document.createElement("input"), katitenRate = document.createElement("input"), gunkoRate = document.createElement("input"), newRateSpan1 = document.createElement("span"), newRateSpan2 = document.createElement("span"), newRateSpan3 = document.createElement("span"), newRateDiv = document.createElement("div");
+					newRateDiv.id = "shareOptDiv";
+					goldRate.type = "text";
+					katitenRate.type = "text";
+					gunkoRate.type = "text";
+					goldRate.name = "shareRate";
+					katitenRate.name = "shareRate";
+					gunkoRate.name = "shareRate";
+					goldRate.id = "shareRate0";
+					katitenRate.id = "shareRate1";
+					gunkoRate.id = "shareRate2";
+					goldRate.value = "0";
+					katitenRate.value = "0.0";
+					gunkoRate.value = "0.0";
+					goldRate.size = "5";
+					katitenRate.size = "5";
+					gunkoRate.size = "5";
+					newRateSpan1.appendChild(document.createTextNode("獲得倍率(整数)→"));
+					newRateSpan1.appendChild(goldRate);
+					newRateSpan1.appendChild(document.createTextNode("％"));
+					newRateSpan2.appendChild(document.createTextNode("オンライン勝点倍率(小数)→"));
+					newRateSpan2.appendChild(katitenRate);
+					newRateSpan3.appendChild(document.createTextNode("軍個人点倍率(小数)→"));
+					newRateSpan3.appendChild(gunkoRate);
+					newRateDiv.appendChild(newRateSpan1);
+					newRateDiv.appendChild(document.createElement("br"));
+					newRateDiv.appendChild(newRateSpan2);
+					newRateDiv.appendChild(document.createElement("br"));
+					newRateDiv.appendChild(newRateSpan3);
+					shareOptionDiv.appendChild(newRateDiv);
+					break;
+				}
+			}
+			function inputData() {
+				let totalData, rankData, shareData;
+				let inputData = document.getElementById("inputArea");
+				const selectElement = document.getElementById("inputSelect");
+				init(selectElement.value);
+				switch(selectElement.value) {
+				case "total":
+					dataToTotal(textToData(inputData.value));
+					totalToResult();
+					break;
+				case "rank":
+					dataToRank(inputData.value);
+					break;
+				case "share":
+					dataToTotal(textToData(inputData.value));
+					dataToShare();
+					break;
+				}
+				inputData.value = "";
+			}
+			function init(selectText) {
+				let optionEls = document.getElementsByName(selectText), newSpan = document.createElement("span"), inputSelectEl = document.getElementById("inputSelect");
+				frags[0] = selectText;
+				inputSelectEl.remove();
+				document.getElementById("inputSelectDiv").appendChild(newSpan);
+				let tempEl1Init = document.getElementById("inputButton");
+				tempEl1Init.value = "　追加　";
+				tempEl1Init.onclick = "";
+				tempEl1Init.addEventListener("click", addData);
+				for(let i = 0; i < optionEls.length; i++) {
+					if(optionEls.item(i).checked) frags[1] = optionEls.item(i).value;
+					else optionEls.item(i).style.visibility = "hidden";
+				}
+				switch(selectText) {
+				case "total":
+					newSpan.appendChild(document.createTextNode("データ集計"));
+					break;
+				case "rank":
+					newSpan.appendChild(document.createTextNode("データ並び替え"));
+					break;
+				case "share":
+					newSpan.appendChild(document.createTextNode("分配計算"));
+					for(let i = 0; i < 3; i++) {
+						let tempEl = document.getElementById("shareRate" + i);
+						shareRateData.push(parseFloat(tempEl.value));
+						tempEl.replaceWith(document.createTextNode(tempEl.value));
+					}
+					break;
+				}
+			}
+			function outputResult() {
+				console.log("r");
+			}
+			
+			function textToData(inputText) {
+				let dataText = "", tempStr = "", indexNum = 0, indexNum2 = 0, sliceStr = "";
+				while(true) {
+					indexNum = inputText.indexOf("月軍vs軍pt:") - inputText.indexOf("月登録:");
+					if(indexNum > 20 || indexNum < 9) {
+						if(indexNum != 0) {
+							let tempNum = (inputText.indexOf("月軍vs軍pt:") > inputText.indexOf("月登録:") ? inputText.indexOf("月軍vs軍pt:") : inputText.indexOf("月登録:"));
+							inputText = inputText.slice(tempNum + 1);
+							continue;
+						}
+						break;
+					}
+					indexNum = inputText.indexOf("月軍vs軍pt:");
+					indexNum = inputText.indexOf("\n", indexNum);
+					indexNum = inputText.indexOf("\n", indexNum + 1);
+					indexNum2 = inputText.lastIndexOf("役職:", indexNum);
+					indexNum2 = (inputText.lastIndexOf("\n", indexNum2 - 2) != -1 ? inputText.lastIndexOf("\n", indexNum2 - 2) + 1 : 0);
+					dataText += inputText.slice(indexNum2, indexNum + 1);
+					inputText = inputText.slice(indexNum);
+				}
+				return dataText;
+			}
+			function dataToTotal(data) {
+				let dataNum, dataBuf, dataName, dataK, dataS, dataG, t_size, dataY, dataV, dataT;
+				let string = [], stringSize;
+				for(let i = 0; true; i++) {
+					dataNum = data.search("ログイン:");
+					if(dataNum == -1) {
+						t_size = i;
+						break;
+					}
+					dataBuf = data.slice(0, dataNum);
+					data = data.slice(dataNum + 1);
+					dataNum = data.search("\n");
+					data = data.slice(dataNum + 1);
+					dataNum = dataBuf.search("\n");
+					dataName = dataBuf.slice(0, dataNum);
+					
+					dataNum = dataBuf.search("役職:");
+					dataBuf = dataBuf.slice(dataNum + 3);
+					dataNum = dataBuf.search("\n");
+					dataY = dataBuf.slice(0, dataNum);
+					
+					dataNum = dataBuf.search("勝点:");
+					dataBuf = dataBuf.slice(dataNum + 3);
+					dataNum = dataBuf.search("\n");
+					dataK = dataBuf.slice(0, dataNum);
+					
+					dataNum = dataBuf.search("勝利pt:");
+					dataBuf = dataBuf.slice(dataNum + 5);
+					dataNum = dataBuf.search("\n");
+					dataS = dataBuf.slice(0, dataNum);
+					
+					dataNum = dataBuf.search("獲得:");
+					dataBuf = dataBuf.slice(dataNum + 3);
+					dataNum = dataBuf.search("\n");
+					dataG = dataBuf.slice(0, dataNum);
+					
+					dataNum = dataBuf.search("登録:");
+					dataBuf = dataBuf.slice(dataNum + 3);
+					dataNum = dataBuf.search("\n");
+					dataT = dataBuf.slice(0, dataNum);
+					
+					dataG = dataG.replace(/,/g, "");
+					dataG = dataG.replace(/G/i, "");
+					dataT = dataG.replace(/,/g, "");
+					dataT = dataG.replace(/G/i, "");
+					
+					dataNum = dataBuf.search("pt:");
+					dataBuf = dataBuf.slice(dataNum + 3);
+					dataNum = dataBuf.search("\n");
+					dataV = dataBuf.slice(0, dataNum);
+					dataV = dataV.replace(/,/g, "");
+					
+					string.push(dataName);
+					string.push(dataG);
+					string.push(dataS);
+					string.push(dataK);
+					
+					if(frags[0] == "share" || frags[1] == "alldata") {
+						//string = dataName + ":" + dataG + "/" + dataS + "/" + dataK + "/" + dataY + "/" + dataT + "/" + dataV;
+						string.push(dataY);
+						string.push(dataT);
+						string.push(dataV);
+					}
+					
+					DATATEXT.push(string);
+					string = [];
+				}
+
+				if(frags[0] == "share") return DATATEXT;
+				console.log(DATATEXT);
+			}
+
+			function totalToResult() {
+				TEXT = JSON.parse(JSON.stringify(DATATEXT));
+				stringSize = (frags[1] == "alldata" ? 7 : 4);
+				let totalString = "", delimiter = "/";
+				if(frags[1] == "alldata") {
+					totalString = "名前:獲得G,勝利pt,勝点,役職,登録G,軍vs軍pt\n\n";
+					delimiter = ",";
+				}
+				for(let i = 0; i < TEXT.length; i++) {
+					if(frags[2] == 1) {
+						totalString += (i + 1) + ".";
+					}
+					if(frags[4] == 1) {
+						for(let j = TEXT[i][1].length - 3; j > 0; j -= 3) {
+							TEXT[i][1] = TEXT[i][1].slice(0, j) + "," + TEXT[i][1].slice(j)
+						}
+					}
+					if(frags[3] == 1) {
+						TEXT[i][1] += "G";
+					}
+					totalString = totalString + TEXT[i][0] + ":" + TEXT[i][1];
+					for(let j = 2; j < stringSize; j++) {
+						totalString = totalString + delimiter + TEXT[i][j];
+					}
+					totalString = totalString + "\n";
+				}
+				document.getElementById("outputArea").value = totalString;
+			}
+			
+			function dataToRank(inputText) {
+				
+			}
+			
+			function dataToShare() {
+				let shareRateEls = document.getElementsByName("shareRate");
+				
+				let tempString, shareString =  "名前:", tempNum = 0, tempTotal = 0, tempSyori = 0;
+				if(frags[1] == "goryusya") {
+					tempString = ["名前", "獲得G", "勝利pt", "勝点"];
+					shareString += tempString[1] + "(" + shareRateData[0] + "%)/";
+					shareString += tempString[2] + "(基本給)/";
+					shareString += tempString[3] + "(1pt当たり" + shareRateData[1] + "G)/分配合計\n\n";
+					for(let i = 0; i < DATATEXT.length; i++) {
+						shareString += DATATEXT[i][0] + ":";
+						tempNum = Math.floor(parseInt(DATATEXT[i][1]) * shareRateData[0] / 100);
+						shareString += "(" + tempString[1] + ")" + DATATEXT[i][1] + "→" + tempNum + "G/";
+						tempTotal = tempNum;
+						tempShori = parseInt(DATATEXT[i][2]);
+						if(tempShori <= 59) tempNum = 0;
+						else if(tempShori < 100) tempNum = 150;
+						else if(tempShori < 130) tempNum = 300;
+						else if(tempShori < 160) tempNum = 500;
+						else if(tempShori >= 160) tempNum = 750;
+						shareString += "(" + tempString[2] + ")" + DATATEXT[i][2] + "→" + tempNum + "G/";
+						tempTotal += tempNum;
+						tempNum = Math.floor(parseInt(DATATEXT[i][3]) * shareRateData[1]);
+						shareString += "(" + tempString[3] + ")" + DATATEXT[i][3] + "→" + tempNum + "G/";
+						tempTotal += tempNum;
+						shareString += "(分配合計)" + tempTotal + "G\n";
+					}
+				}
+				else {
+					tempString = ["名前", "役職手当", "登録軍資金", "軍vs勝点"];
+					shareString += tempString[1] + "(団員は0G)/";
+					shareString += tempString[2] + "(5%)/";
+					shareString += tempString[3] + "(1pt当たり" + shareRateData[2] + "G)/分配合計\n\n";
+					for(let i = 0; i < DATATEXT.length; i++) {
+						shareString += DATATEXT[i][0] + ":";
+						switch(DATATEXT[i][4]) {
+						case "団員":
+							tempNum = 0;
+							break;
+						case "副団長":
+							tempNum = 1000;
+							break;
+						case "軍団長":
+							tempNum = 5000;
+							break;
+						default:
+							tempNum = 500;
+						}
+						shareString += "(" + tempString[1] + ")" + DATATEXT[i][4] + "→" + tempNum + "G/";
+						tempTotal = tempNum;
+						tempNum = Math.floor(parseInt(DATATEXT[i][5]) * 0.05);
+						shareString += "(" + tempString[2] + ")" + DATATEXT[i][5] + "→" + tempNum + "G/";
+						tempTotal += tempNum;
+						tempNum = Math.floor(parseInt(DATATEXT[i][6]) * parseFloat(shareRateData[3]));
+						shareString += "(" + tempString[3] + ")" + DATATEXT[i][6] + "→" + tempNum + "G/";
+						tempTotal += tempNum;
+						shareString += "(分配合計)" + tempTotal + "G\n";
+					}
+				}
+				document.getElementById("outputArea").value = shareString;
+				return shareString;
+			}
+			
+			let addData = function() {
+				let outTextEl = document.getElementById("outputArea"), inTextEl = document.getElementById("inputArea"), string = "";
+				string = outTextEl.value;
+				switch(frags[0]) {
+				case "total":
+					dataToTotal(textToData(inTextEl.value));
+					totalToResult();
+					break;
+				case "rank":
+					break;
+				case "share":
+					dataToTotal(textToData(inTextEl.value));
+					dataToShare();
+					//let addShareText = dataToShare(dataToTotal(textToData(inTextEl.value)));
+					//string += addShareText.substring(addShareText.indexOf("\n\n") + 2);
+					//outTextEl.value = string;
+					break;
+				}
+				inTextEl.value = "";
+			};
+			
+			function outputOptChange(number) {
+				switch(number) {
+				case 1:
+					frags[2] = frags[2] * -1;
+					break;
+				case 2:
+					frags[3] = frags[3] * -1;
+					break;
+				case 3:
+					frags[4] = frags[4] * -1;
+					break;
+				}
+				if(document.getElementById("outputArea").value != "") {
+					outputResult();
+				}
+				console.log(frags);
+			}
+
+			function copyResult(frag) {
+				if(frag) {
+					let result = document.getElementById("outputArea");
+					if(navigator.clipboard) {
+						navigator.clipboard.writeText(result.value);
+					} else {
+						result.select();
+						document.execCommand('copy');
+					}
+					document.getElementById("copyResultSpan").innerHTML = "団長データも忘れずに";
+					document.getElementById("copyButton").value = "コピー完了";
+					window.setTimeout(copyResult, 3000);
+				} else {
+					document.getElementById("copyResultSpan").innerHTML = "";
+					document.getElementById("copyButton").value = "結果をコピー";
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<header>
+			<h1>集計用プログラム</h1>
+		</header>
+		<div id="mainDataIn">
+			<table border="1px">
+				<tr><td>
+				<label for="inputArea">データ入力：</label>
+				</td><td>
+				<label>入力設定：</label>
+				</td></tr>
+				<tr><td rowspan="3">
+				<textarea class="smartPhone" id="inputArea" rows="5" cols="20" placeholder="ここにペーストして入力"></textarea>
+				</td><td>
+				<div id="inputSelectDiv">内容：
+				<select name="inputData" id="inputSelect" onchange="inputSelect()">
+				<option value="total" selected>データ集計</option>
+				<option value="rank">データ並び替え</option>
+				<option value="share">分配計算</option>
+				</select></div>
+				</td></tr>
+				<tr><td>
+				<div id="inputOption"><span id="inOptSpan">
+				<input type="radio" name="total" value="syukei" checked>集計用</input>
+				<input type="radio" name="total" value="alldata">全データ</input>
+				</span></div>
+				</td></tr>
+				<tr><td>
+				<input id="inputButton" type="button" value="　入力　" onclick="inputData()">
+				<input id="inputClearButton" type="button" value="リセット" onclick="window.location.reload();">
+				</td></tr>
+			</table>
+			<div id="shareOption">
+			</div>
+		</div>
+		<br><br>
+		<div id="mainDataOut">
+			<table border="1px">
+				<tr><td>
+				<label for="outputArea">結果出力：</label>
+				</td><td>
+				<label>出力設定：</label>
+				</td></tr>
+				<tr><td rowspan="3">
+				<textarea class="smartPhone" id="outputArea" rows="5" cols="20" placeholder="ここに結果が出力される"></textarea>
+				</td><td>
+				<div>
+				<input type="checkbox" name="outputOption" value="numbering" onchange="outputOptChange(1)">ナンバリング
+				</div>
+				</td></tr>
+				<tr><td>
+				<div>
+				<input type="checkbox" name="outputOption" value="putg" onchange="outputOptChange(2)">Gをつける
+				</div>
+				</td></tr>
+				<tr><td>
+				<div>
+				<input type="checkbox" name="outputOption" value="comma" onchange="outputOptChange(3)">カンマをつける
+				</div>
+				</td></tr>
+				<tr><td>
+					<input id="copyButton" type="button" value="結果をコピー" onclick="copyResult(true)">
+				</td><td>
+					<span id="copyResultSpan"></span>
+				</td></tr>
+			</table>
+		</div>
+		<br><br><br>
+		<div id="example">
+			<h2>利用方法(タップして表示)</h2>
+			<details>
+			<summary>データ集計方法</summary>
+			<h2>①軍団員データをコピー</h2>
+			<img src="TotalExpImg/IMG_2091.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				まずはテキストのコピーをします。画面を長押しして、画像のようにしてください。
+			</div><br>
+			<img src="TotalExpImg/IMG_2079.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				コピーし始めは団員名よりも上であればどこでも大丈夫です。
+			</div><br>
+			<img src="TotalExpImg/IMG_2080.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				コピー範囲はページ下のＮＥＸＴまでです。団員情報が全てコピー範囲に入っていれば、コピーの終端はもっと下の方でも大丈夫です。
+			</div><br>
+			<img src="TotalExpImg/IMG_2081.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				団員情報はこのようにコピー範囲に入っているため、蒼くなっています。
+			</div><br>
+			<h2>②コピーしたテキストをペースト</h2>
+			<img src="TotalExpImg/IMG_2094.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				今コピーした団員情報をデータ入力の欄にペーストしてください。
+			</div><br>
+			<img src="TotalExpImg/IMG_2095.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				ペーストしたらこうなります。
+			</div><br>
+			<h2>③入力ボタンを押す</h2>
+			<img src="TotalExpImg/IMG_2096.PNG" width="350px" height="700px" alt="pic1">
+			<dev>
+				入力ボタンを押すと、画像のように結果出力の欄に集計結果が出力されます。ここで、「結果をコピー」ボタンを押すと、結果をコピーできます。(長押しコピーしなくて大丈夫です。)
+			</dev><br>
+			<img src="TotalExpImg/IMG_2100.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				集計結果のテキストはこんな感じです。名前だけはそのまま集計結果に反映されてしまうため、見やすいように修正をお願いします。
+			</div><br>
+			<h2>④追加ボタンでデータ追加</h2>
+			<img src="TotalExpImg/IMG_2086.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				次のページも先程と同じようにコピーしてください。コピーは下から上に向かってやるとやりやすいです(iPhoneでは)。
+			</div><br>
+			<img src="TotalExpImg/IMG_2097.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				コピーしたテキストを空になっているデータ入力欄にペーストしてください。
+			</div><br>
+			<img src="TotalExpImg/IMG_2099.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				先程入力ボタンだったところが追加ボタンになっています。追加ボタンを押すと、データ入力欄が空になります。出力に変化がなさそうですが、ちゃんとデータが追加されています。
+			</div><br>
+			<img src="TotalExpImg/IMG_2102.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				結果をコピーボタンを押すと、「コピーしました。」と出ます。これが出るとコピー出来てます。
+			</div><br>
+			<img src="TotalExpImg/IMG_2101.PNG" width="350px" height="700px" alt="pic1">
+			<div>
+				ペーストして確認すると、データが追加されているのがわかります。
+			</div><br>
+			<h2>データ集計まとめ</h2>
+			<div>
+				①軍団員データをコピー<br>
+				②入力欄にペースト<br>
+				③入力ボタンを押す<br>
+				④次のページをコピー<br>
+				⑤追加ボタンを押す<br>
+				⑥結果をコピーボタンを押す<br>
+				⑦完了
+			</div>
+			</details>
+			<br>
+			<details>
+			<summary>データ並び替え方法</summary>
+			</details>
+			<br>
+			<details>
+			<summary>分配計算方法</summary>
+			</details>
+		</div>
+		<br><br><br><br><br><br><br><br>
+		<br><br><br><br><br><br><br><br>
+		<br><br><br><br><br><br><br><br>
+		<br><br><br><br><br><br><br><br>
+		<div id="contents">
+			<ul class="contentsUl">
+			<li><a href="#mainDataIn">データ入力</a></li>
+			<li><a href="#mainDataOut">結果出力</a></li>
+			<li><a href="#example">利用方法</a></li>
+			</ul>
+		</div>
+	</body>
+</html>
