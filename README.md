@@ -8,7 +8,6 @@ Google Apps Scriptで開発したツール本体を、LINEbotを入出力とし�
 ウェブ版ツールがUIなどに使いづらさがあったためLINE版を新規開発
 
 ## 実行動画
-ゲーム画面はぼかしてます
 https://user-images.githubusercontent.com/98578587/226675880-bde5106f-f6be-46b7-92cf-c0eff5ed27d8.mp4
 
 
